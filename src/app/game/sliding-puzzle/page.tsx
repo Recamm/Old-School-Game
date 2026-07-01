@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styles from "./SlidingPuzzle.module.css";
 
 const SIZES = [3, 4, 5];
@@ -14,7 +14,7 @@ function generateSolvablePuzzle(size: number): number[] {
       [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
     }
     tiles.push(0);
-  } while (!isSolvable(tiles, size));
+  } while (!isSolvable(tiles, size) || isSolved(tiles));
   return tiles;
 }
 
@@ -51,15 +51,15 @@ export default function SlidingPuzzle() {
   const [moves, setMoves] = useState(0);
   const [won, setWon] = useState(false);
 
-  useEffect(() => {
-    startGame();
-  }, [size]);
-
-  const startGame = () => {
+  const startGame = useCallback(() => {
     setTiles(generateSolvablePuzzle(size));
     setMoves(0);
     setWon(false);
-  };
+  }, [size]);
+
+  useEffect(() => {
+    startGame();
+  }, [startGame]);
 
   const handleTileClick = (index: number) => {
     if (won) return;
@@ -112,13 +112,15 @@ export default function SlidingPuzzle() {
         style={{ gridTemplateColumns: `repeat(${size}, 1fr)` }}
       >
         {tiles.map((tile, index) => (
-          <div
+          <button
             key={index}
             className={`${styles.tile} ${tile === 0 ? styles.empty : ""}`}
             onClick={() => handleTileClick(index)}
+            aria-label={tile !== 0 ? `Tile ${tile}` : "Empty space"}
+            disabled={tile === 0}
           >
             {tile !== 0 ? tile : ""}
-          </div>
+          </button>
         ))}
       </div>
 
